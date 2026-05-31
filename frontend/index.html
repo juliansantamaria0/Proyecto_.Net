@@ -586,7 +586,10 @@
 <script type="module" src="js/app.js?v=6"></script>
 <script>
     // En Render no usamos Service Worker (evita caché rota al despertar el servicio free)
-    if (location.hostname.endsWith('.onrender.com') && 'serviceWorker' in navigator) {
+    const isCloudHost = location.hostname.endsWith('.onrender.com') ||
+        location.hostname.endsWith('.railway.app') ||
+        location.hostname.endsWith('.up.railway.app');
+    if (isCloudHost && 'serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
     } else if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {

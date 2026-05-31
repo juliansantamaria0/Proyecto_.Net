@@ -10,8 +10,12 @@ public static class RenderConnectionHelper
         if (!provider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
             return;
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? configuration["DATABASE_URL"];
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        if (IsLocalPlaceholder(connectionString))
+            connectionString = null;
+
+        connectionString ??= configuration["DATABASE_URL"]
+            ?? configuration["DATABASE_PRIVATE_URL"];
 
         if (string.IsNullOrWhiteSpace(connectionString))
             return;
@@ -19,22 +23,19 @@ public static class RenderConnectionHelper
         configuration["ConnectionStrings:DefaultConnection"] = NormalizePostgres(connectionString);
     }
 
+    private static bool IsLocalPlaceholder(string? connectionString) =>
+        !string.IsNullOrWhiteSpace(connectionString) &&
+        connectionString.Contains("localhost", StringComparison.OrdinalIgnoreCase);
+
     private static string NormalizePostgres(string connectionString)
     {
-        if (connectionString.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
-            connectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
-        {
-            var builder = new NpgsqlConnectionStringBuilder(connectionString)
-            {
-                SslMode = SslMode.Require
-            };
-            return builder.ConnectionString;
-        }
+        var builder = connectionString.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+                      connectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase)
+            ? new NpgsqlConnectionStringBuilder(connectionString)
+            : new NpgsqlConnectionStringBuilder(connectionString);
 
-        var csb = new NpgsqlConnectionStringBuilder(connectionString)
-        {
-            SslMode = SslMode.Require
-        };
-        return csb.ConnectionString;
+        var isInternal = builder.Host?.Contains("railway.internal", StringComparison.OrdinalIgnoreCase) == true;
+        builder.SslMode = isInternal ? SslMode.Prefer : SslMode.Require;
+        return builder.ConnectionString;
     }
 }

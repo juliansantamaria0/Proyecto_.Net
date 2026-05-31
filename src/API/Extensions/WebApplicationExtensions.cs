@@ -22,7 +22,7 @@ public static class WebApplicationExtensions
             app.UseIpRateLimiting();
         }
 
-        if (!app.Environment.IsDevelopment() && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RENDER")))
+        if (!app.Environment.IsDevelopment() && !IsCloudHost())
             app.UseHttpsRedirection();
 
         app.UseCors("AllowAll");
@@ -104,4 +104,8 @@ public static class WebApplicationExtensions
             }
         });
     }
+
+    private static bool IsCloudHost() =>
+        !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RENDER")) ||
+        !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RAILWAY_ENVIRONMENT"));
 }

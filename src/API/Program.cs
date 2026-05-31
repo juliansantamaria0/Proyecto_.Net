@@ -22,9 +22,11 @@ app.UseApiPipeline();
 app.MapGet("/health", () => Results.Text("OK"));
 
 app.Logger.LogInformation(
-    "AutoTallerManager listening on port {Port} | RENDER={Render} | Frontend={Frontend}",
+    "AutoTallerManager listening on port {Port} | Cloud={Cloud} | Frontend={Frontend}",
     port,
-    Environment.GetEnvironmentVariable("RENDER") ?? "false",
+    Environment.GetEnvironmentVariable("RAILWAY_ENVIRONMENT")
+        ?? Environment.GetEnvironmentVariable("RENDER")
+        ?? "false",
     Directory.Exists(Path.Combine(app.Environment.ContentRootPath, "frontend")) ? "ok" : "missing");
 
 _ = Task.Run(async () =>
