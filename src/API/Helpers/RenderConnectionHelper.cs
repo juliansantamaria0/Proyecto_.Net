@@ -20,8 +20,8 @@ public static class RenderConnectionHelper
         if (IsLocalPlaceholder(connectionString))
             connectionString = null;
 
-        connectionString ??= configuration["DATABASE_URL"]
-            ?? configuration["DATABASE_PRIVATE_URL"]
+        connectionString ??= configuration["DATABASE_PRIVATE_URL"]
+            ?? configuration["DATABASE_URL"]
             ?? configuration["POSTGRES_URL"];
 
         if (string.IsNullOrWhiteSpace(connectionString))
@@ -33,6 +33,20 @@ public static class RenderConnectionHelper
         }
 
         configuration["ConnectionStrings:DefaultConnection"] = NormalizePostgres(connectionString);
+    }
+
+    public static string GetDatabaseHost(IConfiguration configuration)
+    {
+        try
+        {
+            var cs = configuration.GetConnectionString("DefaultConnection");
+            if (string.IsNullOrWhiteSpace(cs)) return "not-set";
+            return new NpgsqlConnectionStringBuilder(cs).Host ?? "unknown";
+        }
+        catch
+        {
+            return "invalid";
+        }
     }
 
     private static void ValidateJwt(ConfigurationManager configuration)
@@ -56,10 +70,8 @@ public static class RenderConnectionHelper
             ? new NpgsqlConnectionStringBuilder(connectionString)
             : new NpgsqlConnectionStringBuilder(connectionString);
 
-        var isInternal = builder.Host?.Contains("railway.internal", StringComparison.OrdinalIgnoreCase) == true
-            || builder.Host?.Contains("railway.app", StringComparison.OrdinalIgnoreCase) == true;
-
-        builder.SslMode = isInternal ? SslMode.Prefer : SslMode.Require;
+        var isInternal = builder.Host?.Contains("railway.internal", StringComparison.OrdinalIgnoreCase) == true;
+        builder.SslMode = isInternal ? SslMode.Disable : SslMode.Require;
         return builder.ConnectionString;
     }
 }

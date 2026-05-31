@@ -18,18 +18,30 @@ builder.Services.AddApiInfrastructure(builder.Configuration, builder.Environment
 
 var app = builder.Build();
 
-var initLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseInit");
-await DbInitializer.InitializeWithRetryAsync(app.Services, initLogger);
-
 app.UseApiPipeline();
 app.MapGet("/health", () => Results.Text("OK"));
 
 app.Logger.LogInformation(
-    "AutoTallerManager listening on port {Port} | Cloud={Cloud} | Frontend={Frontend}",
+    "AutoTallerManager starting on port {Port} | Cloud={Cloud} | Frontend={Frontend} | DbHost={DbHost}",
     port,
     Environment.GetEnvironmentVariable("RAILWAY_ENVIRONMENT")
         ?? Environment.GetEnvironmentVariable("RENDER")
         ?? "false",
-    Directory.Exists(Path.Combine(app.Environment.ContentRootPath, "frontend")) ? "ok" : "missing");
+    Directory.Exists(Path.Combine(app.Environment.ContentRootPath, "frontend")) ? "ok" : "missing",
+    RenderConnectionHelper.GetDatabaseHost(builder.Configuration));
+
+var initLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseInit");
+_ = Task.Run(async () =>
+{
+    try
+    {
+        await DbInitializer.InitializeWithRetryAsync(app.Services, initLogger);
+        initLogger.LogInformation("Database ready.");
+    }
+    catch (Exception ex)
+    {
+        initLogger.LogError(ex, "Database initialization failed.");
+    }
+});
 
 await app.RunAsync();
