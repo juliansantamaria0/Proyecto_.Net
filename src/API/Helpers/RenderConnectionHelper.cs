@@ -16,19 +16,17 @@ public static class RenderConnectionHelper
         if (!provider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
             return;
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
-        if (IsLocalPlaceholder(connectionString))
-            connectionString = null;
-
-        connectionString ??= configuration["DATABASE_PRIVATE_URL"]
-            ?? configuration["DATABASE_URL"]
-            ?? configuration["POSTGRES_URL"];
+        var connectionString = ResolvePostgresConnectionString(configuration);
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             if (IsCloudHost)
+            {
                 throw new InvalidOperationException(
-                    "DATABASE_URL no configurada. En Railway: Variables → Add Reference → PostgreSQL → DATABASE_URL.");
+                    "No hay connection string de PostgreSQL. En Railway → autotaller-manager → Variables: " +
+                    "elimine DATABASE_PRIVATE_URL (no existe en autotaller-db) y añada " +
+                    "DATABASE_URL=${{autotaller-db.DATABASE_URL}}.");
+            }
             return;
         }
 
@@ -47,6 +45,52 @@ public static class RenderConnectionHelper
         {
             return "invalid";
         }
+    }
+
+    private static string? ResolvePostgresConnectionString(IConfiguration configuration)
+    {
+        var fromConfig = configuration.GetConnectionString("DefaultConnection");
+        if (!IsLocalPlaceholder(fromConfig))
+            return fromConfig;
+
+        // Railway: DATABASE_URL = red privada (*.railway.internal). No usar DATABASE_PRIVATE_URL (nombre obsoleto).
+        foreach (var key in new[] { "DATABASE_URL", "DATABASE_PUBLIC_URL", "POSTGRES_URL", "DATABASE_PRIVATE_URL" })
+        {
+            var value = GetEnv(configuration, key);
+            if (!string.IsNullOrWhiteSpace(value))
+                return value;
+        }
+
+        return BuildFromPgVars(configuration);
+    }
+
+    private static string? BuildFromPgVars(IConfiguration configuration)
+    {
+        var host = GetEnv(configuration, "PGHOST");
+        var user = GetEnv(configuration, "PGUSER");
+        var database = GetEnv(configuration, "PGDATABASE");
+        if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(database))
+            return null;
+
+        var portText = GetEnv(configuration, "PGPORT") ?? "5432";
+        if (!int.TryParse(portText, out var port))
+            port = 5432;
+
+        var builder = new NpgsqlConnectionStringBuilder
+        {
+            Host = host,
+            Port = port,
+            Username = user,
+            Password = GetEnv(configuration, "PGPASSWORD") ?? "",
+            Database = database,
+        };
+        return builder.ConnectionString;
+    }
+
+    private static string? GetEnv(IConfiguration configuration, string key)
+    {
+        var value = configuration[key];
+        return string.IsNullOrWhiteSpace(value) ? null : value;
     }
 
     private static void ValidateJwt(ConfigurationManager configuration)
@@ -71,6 +115,7 @@ public static class RenderConnectionHelper
             : new NpgsqlConnectionStringBuilder(connectionString);
 
         var isInternal = builder.Host?.Contains("railway.internal", StringComparison.OrdinalIgnoreCase) == true;
+
         builder.SslMode = isInternal ? SslMode.Disable : SslMode.Require;
         return builder.ConnectionString;
     }
