@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AutoTallerManager.API/AutoTallerManager.API.csproj" />
+    <Project Path="src/AutoTallerManager.Application/AutoTallerManager.Application.csproj" />
+    <Project Path="src/AutoTallerManager.Domain/AutoTallerManager.Domain.csproj" />
+    <Project Path="src/AutoTallerManager.Infrastructure/AutoTallerManager.Infrastructure.csproj" />
+  </Folder>
+</Solution>

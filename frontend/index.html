@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>AutoTallerManager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css?v=4">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#030712">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AutoTaller">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+
+<!-- Toast notifications -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- Loading overlay -->
+<div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"><i class="fa-solid fa-gear fa-spin"></i></div>
+</div>
+
+<!-- Modal genérico -->
+<div id="modal-overlay" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="modal-title"></h3>
+            <button id="modal-close" class="btn-icon"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="modal-body" class="modal-body"></div>
+        <div id="modal-footer" class="modal-footer"></div>
+    </div>
+</div>
+
+<!-- ===================== LOGIN ===================== -->
+<section id="login-view" class="view login-view">
+    <div class="login-card">
+        <div class="login-brand">
+            <i class="fa-solid fa-car-side"></i>
+            <h1>AutoTallerManager</h1>
+            <p>Sistema de Gestión de Taller Automotriz</p>
+        </div>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="correo"><i class="fa-solid fa-envelope"></i> Correo</label>
+                <input id="correo" name="correo" type="email" placeholder="admin@autotaller.com" autocomplete="username">
+                <span id="login-correo-error" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label for="password"><i class="fa-solid fa-lock"></i> Contraseña</label>
+                <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password">
+                <span id="login-password-error" class="field-error"></span>
+            </div>
+            <label class="checkbox-row">
+                <input type="checkbox" id="login-remember" checked>
+                Mantener sesión iniciada
+            </label>
+            <button type="submit" class="btn btn-primary btn-block" data-rate-sensitive>
+                <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
+            </button>
+        </form>
+        <p class="auth-switch">¿No tienes cuenta? <a href="#register" id="link-to-register">Regístrate aquí</a></p>
+        <p class="login-hint text-muted">Demo staff: admin@autotaller.com / Admin123!</p>
+    </div>
+</section>
+
+<!-- ===================== REGISTRO ===================== -->
+<section id="register-view" class="view login-view">
+    <div class="login-card">
+        <div class="login-brand">
+            <i class="fa-solid fa-user-plus"></i>
+            <h1>Crear cuenta</h1>
+            <p>Regístrate como cliente del taller</p>
+        </div>
+        <form id="register-form">
+            <div class="form-group">
+                <label>Nombre completo *</label>
+                <input name="nombre" required>
+                <span id="reg-nombre-error" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label>Teléfono *</label>
+                <input name="telefono" type="tel" required>
+                <span id="reg-telefono-error" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label>Correo *</label>
+                <input name="correo" type="email" required>
+                <span id="reg-correo-error" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label>Contraseña *</label>
+                <input name="password" type="password" minlength="6" required>
+                <span id="reg-password-error" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label>Confirmar contraseña *</label>
+                <input name="passwordConfirm" type="password" required>
+                <span id="reg-confirm-error" class="field-error"></span>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" data-rate-sensitive>
+                <i class="fa-solid fa-user-check"></i> Crear cuenta
+            </button>
+        </form>
+        <p class="auth-switch">¿Ya tienes cuenta? <a href="#login" id="link-to-login">Inicia sesión</a></p>
+    </div>
+</section>
+
+<!-- ===================== APP LAYOUT ===================== -->
+<div id="app-layout" class="app-layout hidden">
+
+    <div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-car-side"></i>
+            <span>AutoTaller</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#dashboard" class="nav-link" data-route="dashboard" data-roles="Admin,Recepcionista,Mecanico">
+                <i class="fa-solid fa-gauge-high"></i> Dashboard
+            </a>
+            <a href="#dashboard-cliente" class="nav-link" data-route="dashboard-cliente" data-roles="Cliente">
+                <i class="fa-solid fa-gauge-high"></i> Mi Panel
+            </a>
+            <a href="#mi-perfil" class="nav-link" data-route="mi-perfil" data-roles="Cliente">
+                <i class="fa-solid fa-id-card"></i> Mi Perfil
+            </a>
+            <a href="#mis-vehiculos" class="nav-link" data-route="mis-vehiculos" data-roles="Cliente">
+                <i class="fa-solid fa-car"></i> Mis Vehículos
+            </a>
+            <a href="#mis-ordenes" class="nav-link" data-route="mis-ordenes" data-roles="Cliente">
+                <i class="fa-solid fa-clipboard-list"></i> Mis Órdenes
+            </a>
+            <a href="#mis-facturas" class="nav-link" data-route="mis-facturas" data-roles="Cliente">
+                <i class="fa-solid fa-file-invoice"></i> Mis Facturas
+            </a>
+            <a href="#clientes" class="nav-link" data-route="clientes" data-roles="Admin,Recepcionista">
+                <i class="fa-solid fa-users"></i> Clientes
+            </a>
+            <a href="#vehiculos" class="nav-link" data-route="vehiculos" data-roles="Admin,Recepcionista,Mecanico">
+                <i class="fa-solid fa-car"></i> Vehículos
+            </a>
+            <a href="#ordenes" class="nav-link" data-route="ordenes" data-roles="Admin,Recepcionista">
+                <i class="fa-solid fa-clipboard-list"></i> Órdenes
+            </a>
+            <a href="#panel-mecanico" class="nav-link" data-route="panel-mecanico" data-roles="Admin,Mecanico">
+                <i class="fa-solid fa-wrench"></i> Panel Mecánico
+            </a>
+            <a href="#repuestos" class="nav-link" data-route="repuestos" data-roles="Admin">
+                <i class="fa-solid fa-boxes-stacked"></i> Inventario
+            </a>
+            <a href="#facturas" class="nav-link" data-route="facturas" data-roles="Admin,Mecanico">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Facturas
+            </a>
+            <a href="#usuarios" class="nav-link" data-route="usuarios" data-roles="Admin">
+                <i class="fa-solid fa-user-gear"></i> Usuarios
+            </a>
+            <a href="#auditorias" class="nav-link" data-route="auditorias" data-roles="Admin">
+                <i class="fa-solid fa-clock-rotate-left"></i> Auditoría
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <i class="fa-solid fa-user-circle"></i>
+                <div>
+                    <strong id="user-name"></strong>
+                    <small id="user-role"></small>
+                </div>
+            </div>
+            <button id="btn-logout" class="btn btn-sm btn-outline btn-block">
+                <i class="fa-solid fa-right-from-bracket"></i> Salir
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main-content">
+        <header class="topbar">
+            <button id="sidebar-toggle" class="btn-icon mobile-only"><i class="fa-solid fa-bars"></i></button>
+            <h2 id="page-title">Dashboard</h2>
+        </header>
+
+        <!-- Dashboard Cliente -->
+        <section id="view-dashboard-cliente" class="view">
+            <div class="metrics-grid">
+                <div class="metric-card metric-blue">
+                    <div class="metric-icon"><i class="fa-solid fa-car"></i></div>
+                    <div class="metric-data">
+                        <span class="metric-value" id="cli-metric-vehiculos">—</span>
+                        <span class="metric-label">Mis vehículos</span>
+                    </div>
+                </div>
+                <div class="metric-card metric-yellow">
+                    <div class="metric-icon"><i class="fa-solid fa-wrench"></i></div>
+                    <div class="metric-data">
+                        <span class="metric-value" id="cli-metric-ordenes">—</span>
+                        <span class="metric-label">Órdenes activas</span>
+                    </div>
+                </div>
+                <div class="metric-card metric-green">
+                    <div class="metric-icon"><i class="fa-solid fa-check-circle"></i></div>
+                    <div class="metric-data">
+                        <span class="metric-value" id="cli-metric-completadas">—</span>
+                        <span class="metric-label">Servicios completados</span>
+                    </div>
+                </div>
+                <div class="metric-card metric-blue">
+                    <div class="metric-icon"><i class="fa-solid fa-receipt"></i></div>
+                    <div class="metric-data">
+                        <span class="metric-value" id="cli-metric-facturas">—</span>
+                        <span class="metric-label">Últimas facturas</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>Órdenes recientes</h3></div>
+                <div class="card-body table-responsive">
+                    <table class="data-table">
+                        <thead><tr><th>#</th><th>Vehículo</th><th>Estado</th><th>Entrega est.</th></tr></thead>
+                        <tbody id="cli-ordenes-recientes"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mi Perfil (Cliente) -->
+        <section id="view-mi-perfil" class="view">
+            <div class="page-header"><h3>Mi Perfil</h3></div>
+            <div class="card profile-card">
+                <div class="card-body">
+                    <div class="profile-row"><i class="fa-solid fa-user"></i><div><small>Nombre</small><strong id="perfil-nombre">—</strong></div></div>
+                    <div class="profile-row"><i class="fa-solid fa-envelope"></i><div><small>Correo</small><strong id="perfil-correo">—</strong></div></div>
+                    <div class="profile-row"><i class="fa-solid fa-phone"></i><div><small>Teléfono</small><strong id="perfil-telefono">—</strong></div></div>
+                    <div class="profile-row"><i class="fa-solid fa-car"></i><div><small>Vehículos registrados</small><strong id="perfil-vehiculos-count">—</strong></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mis Vehículos -->
+        <section id="view-mis-vehiculos" class="view">
+            <div class="page-header">
+                <h3>Mis Vehículos</h3>
+                <button id="btn-agregar-vehiculo" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Agregar vehículo</button>
+            </div>
+            <div class="card">
+                <div class="card-body table-responsive">
+                    <table id="mis-vehiculos-table" class="data-table">
+                        <thead><tr><th>Vehículo</th><th>Año</th><th>VIN</th><th>Kilometraje</th></tr></thead>
+                        <tbody id="mis-vehiculos-body"></tbody>
+                    </table>
+                </div>
+                <div id="mis-vehiculos-pagination" class="pagination-bar"></div>
+            </div>
+        </section>
+
+        <!-- Mis Órdenes -->
+        <section id="view-mis-ordenes" class="view">
+            <div class="page-header"><h3>Mis Órdenes de Servicio</h3></div>
+            <div class="toolbar filters-bar card">
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select id="filter-mis-orden-estado">
+                        <option value="">Todos</option>
+                        <option value="0">Pendiente</option>
+                        <option value="1">En proceso</option>
+                        <option value="2">Completada</option>
+                        <option value="3">Cancelada</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body table-responsive">
+                    <table id="mis-ordenes-table" class="data-table">
+                        <thead><tr><th>#</th><th>Vehículo</th><th>Servicio</th><th>Estado</th><th>Entrega</th><th></th></tr></thead>
+                        <tbody id="mis-ordenes-body"></tbody>
+                    </table>
+                </div>
+                <div id="mis-ordenes-pagination" class="pagination-bar"></div>
+            </div>
+        </section>
+
+        <!-- Mis Facturas -->
+        <section id="view-mis-facturas" class="view">
+            <div class="page-header"><h3>Mis Facturas</h3></div>
+            <div class="card">
+                <div class="card-body table-responsive">
+                    <table id="mis-facturas-table" class="data-table">
+                        <thead><tr><th>N° Factura</th><th>Orden</th><th>Vehículo</th><th>Fecha</th><th>Total</th><th></th></tr></thead>
+                        <tbody id="mis-facturas-body"></tbody>
+                    </table>
+                </div>
+                <div id="mis-facturas-pagination" class="pagination-bar"></div>
+            </div>
+        </section>
+
+        <!-- Dashboard Staff -->
+        <section id="view-dashboard" class="view">
+            <div class="metrics-grid">
+                <div class="metric-card metric-blue">
+                    <div class="metric-icon"><i class="fa-solid fa-clipboard-list"></i></div>
+                    <div class="metric-data">
+                        <span class="metric-value" id="metric-ordenes">—</span>
+                        <span class="metric-label">Órdenes activas</span>
+                    </div>
+                </div>
+                <div class="metric-card metric-red">
+                    <div class="metric-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="metric-data">
+                        <span class="metric-value" id="metric-stock">—</span>
+                        <span class="metric-label">Repuestos bajo stock</span>
+                    </div>
+                </div>
+                <div class="metric-card metric-green">
+                    <div class="metric-icon"><i class="fa-solid fa-dollar-sign"></i></div>
+                    <div class="metric-data">
+                        <span class="metric-value" id="metric-facturacion">—</span>
+                        <span class="metric-label">Facturación hoy</span>
+                    </div>
+                </div>
+            </div>
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header"><h3>Resumen operativo</h3></div>
+                    <div class="card-body chart-container">
+                        <canvas id="dashboard-chart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3>Órdenes recientes</h3></div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table">
+                            <thead><tr><th>#</th><th>Cliente</th><th>Vehículo</th><th>Estado</th><th>Fecha</th></tr></thead>
+                            <tbody id="dashboard-ordenes-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Clientes -->
+        <section id="view-clientes" class="view">
+            <div class="page-header">
+                <h3>Clientes y Vehículos</h3>
+                <button id="btn-nuevo-cliente" class="btn btn-primary" data-roles="Admin,Recepcionista">
+                    <i class="fa-solid fa-user-plus"></i> Registrar con vehículo
+                </button>
+            </div>
+            <div class="toolbar">
+                <div class="search-box">
+                    <i class="fa-solid fa-search"></i>
+                    <input id="clientes-search" type="text" placeholder="Buscar por nombre o correo...">
+                </div>
+            </div>
+            <div class="content-split">
+                <div class="card flex-2">
+                    <div class="card-body table-responsive">
+                        <table id="clientes-table" class="data-table">
+                            <thead><tr><th>ID</th><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Vehículos</th><th>Acciones</th></tr></thead>
+                            <tbody id="clientes-body"></tbody>
+                        </table>
+                    </div>
+                    <div id="clientes-pagination" class="pagination-bar"></div>
+                </div>
+                <div id="cliente-detail-panel" class="card flex-1 hidden">
+                    <div class="card-header"><h3 id="cliente-detail-title">Detalle</h3></div>
+                    <div class="card-body">
+                        <div id="cliente-detail-info"></div>
+                        <h4 class="form-section-title">Vehículos</h4>
+                        <table class="data-table">
+                            <thead><tr><th>Vehículo</th><th>Año</th><th>VIN</th><th>Km</th></tr></thead>
+                            <tbody id="cliente-vehiculos-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Órdenes -->
+        <section id="view-ordenes" class="view">
+            <div class="page-header">
+                <h3>Órdenes de Servicio</h3>
+                <button id="btn-nueva-orden" class="btn btn-primary" data-roles="Admin,Recepcionista">
+                    <i class="fa-solid fa-plus"></i> Nueva orden
+                </button>
+            </div>
+            <div class="filters-bar card">
+                <div class="filters-grid">
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select id="filter-estado">
+                            <option value="">Todos</option>
+                            <option value="0">Pendiente</option>
+                            <option value="1">En proceso</option>
+                            <option value="2">Completada</option>
+                            <option value="3">Cancelada</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Desde</label>
+                        <input id="filter-fecha-desde" type="date">
+                    </div>
+                    <div class="form-group">
+                        <label>Hasta</label>
+                        <input id="filter-fecha-hasta" type="date">
+                    </div>
+                    <div class="form-group">
+                        <label>VIN / Vehículo</label>
+                        <input id="filter-vin" type="text" placeholder="Buscar VIN...">
+                    </div>
+                    <div class="form-group filter-actions">
+                        <button id="btn-filter-ordenes" class="btn btn-primary btn-sm"><i class="fa-solid fa-filter"></i> Filtrar</button>
+                        <button id="btn-clear-filters" class="btn btn-outline btn-sm">Limpiar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body table-responsive">
+                    <table id="ordenes-table" class="data-table">
+                        <thead>
+                            <tr><th>#</th><th>Cliente</th><th>Vehículo</th><th>Tipo</th><th>Mecánico</th><th>Estado</th><th>Entrega est.</th><th>Acciones</th></tr>
+                        </thead>
+                        <tbody id="ordenes-body"></tbody>
+                    </table>
+                </div>
+                <div id="ordenes-pagination" class="pagination-bar"></div>
+            </div>
+        </section>
+
+        <!-- Repuestos -->
+        <section id="view-repuestos" class="view">
+            <div class="page-header">
+                <h3>Inventario de Repuestos</h3>
+                <button id="btn-nuevo-repuesto" class="btn btn-primary">
+                    <i class="fa-solid fa-plus"></i> Nuevo repuesto
+                </button>
+            </div>
+            <div class="toolbar">
+                <div class="search-box">
+                    <i class="fa-solid fa-search"></i>
+                    <input id="repuestos-search" type="text" placeholder="Buscar por descripción...">
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body table-responsive">
+                    <table id="repuestos-table" class="data-table">
+                        <thead><tr><th>Código</th><th>Descripción</th><th>Categoría</th><th>Stock</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody id="repuestos-body"></tbody>
+                    </table>
+                </div>
+                <div id="repuestos-pagination" class="pagination-bar"></div>
+            </div>
+        </section>
+
+        <!-- Vehículos -->
+        <section id="view-vehiculos" class="view">
+            <div class="page-header"><h3>Búsqueda de Vehículos</h3></div>
+            <div class="filters-bar card">
+                <div class="filters-grid">
+                    <div class="form-group"><label>VIN</label><input id="vehiculos-vin" type="text" placeholder="Número de serie"></div>
+                    <div class="form-group"><label>Marca / Modelo</label><input id="vehiculos-marca" type="text" placeholder="Toyota, Corolla..."></div>
+                    <div class="form-group filter-actions">
+                        <button id="btn-buscar-vehiculos" class="btn btn-primary btn-sm"><i class="fa-solid fa-search"></i> Buscar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body table-responsive">
+                    <table id="vehiculos-table" class="data-table">
+                        <thead><tr><th>VIN</th><th>Vehículo</th><th>Año</th><th>Km</th><th>Cliente</th><th>ID Cliente</th></tr></thead>
+                        <tbody id="vehiculos-body"></tbody>
+                    </table>
+                </div>
+                <div id="vehiculos-pagination" class="pagination-bar"></div>
+            </div>
+        </section>
+
+        <!-- Panel Mecánico -->
+        <section id="view-panel-mecanico" class="view">
+            <div class="page-header">
+                <h3>Mi Panel de Trabajo</h3>
+                <button id="panel-refresh" class="btn btn-outline" data-rate-sensitive><i class="fa-solid fa-rotate"></i> Actualizar</button>
+            </div>
+            <div class="kanban-board">
+                <div class="kanban-column">
+                    <h4>Pendientes <span class="badge badge-pending" id="panel-count-pendientes">0</span></h4>
+                    <div id="panel-pendientes" class="panel-mecanico-grid"></div>
+                </div>
+                <div class="kanban-column">
+                    <h4>En proceso <span class="badge badge-progress" id="panel-count-proceso">0</span></h4>
+                    <div id="panel-proceso" class="panel-mecanico-grid"></div>
+                </div>
+                <div class="kanban-column">
+                    <h4>Completadas <span class="badge badge-done" id="panel-count-completadas">0</span></h4>
+                    <div id="panel-completadas" class="panel-mecanico-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Usuarios -->
+        <section id="view-usuarios" class="view">
+            <div class="page-header">
+                <h3>Gestión de Usuarios</h3>
+                <button id="btn-nuevo-usuario" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> Nuevo usuario</button>
+            </div>
+            <div class="card">
+                <div class="card-body table-responsive">
+                    <table id="usuarios-table" class="data-table">
+                        <thead><tr><th>ID</th><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody id="usuarios-body"></tbody>
+                    </table>
+                </div>
+                <div id="usuarios-pagination" class="pagination-bar"></div>
+            </div>
+        </section>
+
+        <!-- Auditorías -->
+        <section id="view-auditorias" class="view">
+            <div class="page-header"><h3>Registro de Auditoría</h3></div>
+            <div class="filters-bar card">
+                <div class="filters-grid">
+                    <div class="form-group"><label>Entidad</label>
+                        <select id="filter-auditoria-entidad">
+                            <option value="">Todas</option>
+                            <option value="Cliente">Cliente</option>
+                            <option value="OrdenServicio">OrdenServicio</option>
+                            <option value="Repuesto">Repuesto</option>
+                            <option value="Factura">Factura</option>
+                            <option value="Usuario">Usuario</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>ID Usuario</label><input id="filter-auditoria-usuario" type="number" placeholder="Opcional"></div>
+                    <div class="form-group filter-actions">
+                        <button id="btn-filter-auditorias" class="btn btn-primary btn-sm">Filtrar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div id="auditorias-timeline" class="audit-timeline"></div>
+                </div>
+                <div id="auditorias-pagination" class="pagination-bar"></div>
+            </div>
+        </section>
+
+        <!-- Facturas -->
+        <section id="view-facturas" class="view">
+            <div class="page-header">
+                <h3>Facturación</h3>
+            </div>
+            <div class="toolbar filters-bar card">
+                <div class="filters-grid">
+                    <div class="form-group"><label>Desde</label><input id="filter-factura-fecha" type="date"></div>
+                    <div class="form-group"><label>Hasta</label><input id="filter-factura-fecha-hasta" type="date"></div>
+                    <div class="form-group filter-actions">
+                        <button id="btn-filter-facturas" class="btn btn-sm btn-primary" data-rate-sensitive><i class="fa-solid fa-filter"></i> Filtrar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="margin-bottom:1.25rem">
+                <div class="card-header"><h3>Ingresos en el período</h3></div>
+                <div class="card-body chart-container"><canvas id="facturas-chart"></canvas></div>
+            </div>
+            <div class="card">
+                <div class="card-body table-responsive">
+                    <table id="facturas-table" class="data-table">
+                        <thead><tr><th>N° Factura</th><th>Orden</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Acciones</th></tr></thead>
+                        <tbody id="facturas-body"></tbody>
+                    </table>
+                </div>
+                <div id="facturas-pagination" class="pagination-bar"></div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script type="module" src="js/app.js?v=5"></script>
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+                .catch(err => console.error('Error al registrar el Service Worker:', err));
+        });
+    }
+</script>
+</body>
+</html>
