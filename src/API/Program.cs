@@ -14,7 +14,7 @@ RenderConnectionHelper.Apply(builder.Configuration);
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddApiInfrastructure(builder.Configuration);
+builder.Services.AddApiInfrastructure(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 
@@ -27,7 +27,11 @@ app.Logger.LogInformation(
     Environment.GetEnvironmentVariable("RENDER") ?? "false",
     Directory.Exists(Path.Combine(app.Environment.ContentRootPath, "frontend")) ? "ok" : "missing");
 
-_ = InitializeDatabaseInBackground(app);
+_ = Task.Run(async () =>
+{
+    await Task.Delay(TimeSpan.FromSeconds(5));
+    await InitializeDatabaseInBackground(app);
+});
 
 await app.RunAsync();
 

@@ -19,9 +19,8 @@ public static class WebApplicationExtensions
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoTallerManager v1");
                 options.DocumentTitle = "AutoTallerManager - Swagger";
             });
+            app.UseIpRateLimiting();
         }
-
-        app.UseIpRateLimiting();
 
         if (!app.Environment.IsDevelopment() && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RENDER")))
             app.UseHttpsRedirection();

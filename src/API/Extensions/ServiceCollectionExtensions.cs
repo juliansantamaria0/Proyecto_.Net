@@ -8,16 +8,23 @@ namespace AutoTallerManager.API.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddApiInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddApiInfrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         services.AddControllers();
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerDocumentation();
         services.AddJwtAuthentication(configuration);
         services.AddAuthorization();
-        services.AddRateLimiting(configuration);
-        services.AddCorsPolicy();
 
+        if (environment.IsDevelopment())
+        {
+            services.AddEndpointsApiExplorer();
+            services.AddSwaggerDocumentation();
+            services.AddRateLimiting(configuration);
+        }
+
+        services.AddCorsPolicy();
         return services;
     }
 
