@@ -1,6 +1,6 @@
 {
   "DatabaseProvider": "MySQL",
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Port=3306;Database=AutoTallerDB;User=root;Password=12040722;"
+    "DefaultConnection": "Server=localhost;Port=3306;Database=AutoTallerDB;User=root;Password=TU_PASSWORD;"
   }
 }

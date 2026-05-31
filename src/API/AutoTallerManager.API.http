@@ -1,6 +1,6 @@
 @AutoTallerManager.API_HostAddress = http://localhost:5192
 
-GET {{AutoTallerManager.API_HostAddress}}/weatherforecast/
+GET {{AutoTallerManager.API_HostAddress}}/swagger/index.html
 Accept: application/json
 
 ###

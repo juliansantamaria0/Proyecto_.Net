@@ -6,10 +6,10 @@ Backend RESTful para la gestión integral de un taller automotriz, implementado 
 
 ```
 src/
-├── AutoTallerManager.Domain/          # Entidades, enums, reglas de negocio, interfaces
-├── AutoTallerManager.Application/     # DTOs, casos de uso, AutoMapper
-├── AutoTallerManager.Infrastructure/  # EF Core, repositorios, Unit of Work
-└── AutoTallerManager.API/             # Controladores, JWT, Rate Limiting, Swagger
+├── Domain/          # Entidades, enums, reglas de negocio, interfaces
+├── Application/     # DTOs, casos de uso, AutoMapper
+├── Infrastructure/  # EF Core, repositorios, Unit of Work
+└── API/             # Controladores, JWT, Rate Limiting, Swagger
 ```
 
 ## Requisitos
@@ -17,7 +17,9 @@ src/
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - PostgreSQL 14+ (Docker en puerto **5433** o instalación local en **5432**)
 
-El proveedor activo es **PostgreSQL** (`DatabaseProvider: PostgreSQL` en `appsettings.json`). La rama MySQL no está habilitada en esta versión.
+El proveedor por defecto en producción es **PostgreSQL** (`DatabaseProvider: PostgreSQL` en `appsettings.json`). También se admite **SQLite** y **MySQL** según configuración.
+
+> **Nota (entorno Development):** al ejecutar con el perfil por defecto (`ASPNETCORE_ENVIRONMENT=Development`), `appsettings.Development.json` usa **SQLite** (`autotaller.db`) para poder probar sin Docker. Si sigue los pasos de PostgreSQL más abajo, use `docker compose up -d` y, opcionalmente, alinee `appsettings.Development.json` con la misma cadena de conexión de `appsettings.json`, o ejecute con `ASPNETCORE_ENVIRONMENT=Production`.
 
 ## Frontend (SPA)
 
@@ -25,7 +27,7 @@ El frontend está en la carpeta `frontend/` y se sirve automáticamente al ejecu
 
 ```bash
 docker compose up -d
-dotnet run --project src/AutoTallerManager.API
+dotnet run --project src/API/AutoTallerManager.API.csproj
 ```
 
 Abra **http://localhost:5192** (o el puerto HTTP configurado) en el navegador.
@@ -49,7 +51,7 @@ frontend/
 
 ### Credenciales demo
 
-Ver tabla de usuarios de prueba arriba.
+Ver tabla **Usuarios de prueba (seed)** más abajo.
 
 ---
 
@@ -68,7 +70,7 @@ Esto crea la base `AutoTallerDB` en **localhost:5433** con usuario/contraseña `
 ### Paso 2 — Ejecutar la API
 
 ```bash
-dotnet run --project src/AutoTallerManager.API
+dotnet run --project src/API/AutoTallerManager.API.csproj
 ```
 
 Las migraciones EF Core y el seed de datos se aplican automáticamente al iniciar.
@@ -78,7 +80,7 @@ Las migraciones EF Core y el seed de datos se aplican automáticamente al inicia
 Si usa una instalación local en el puerto **5432**, copie el ejemplo y ajuste su contraseña:
 
 ```bash
-copy src\AutoTallerManager.API\appsettings.Local.json.example src\AutoTallerManager.API\appsettings.Local.json
+copy src\API\appsettings.Local.json.example src\API\appsettings.Local.json
 ```
 
 Edite `appsettings.Local.json` con su contraseña real. Ese archivo no se sube a git.
@@ -88,13 +90,13 @@ Edite `appsettings.Local.json` con su contraseña real. Ese archivo no se sube a
 Se aplican automáticamente al iniciar la API. También puede ejecutarlas manualmente:
 
 ```bash
-dotnet ef database update --project src/AutoTallerManager.Infrastructure --startup-project src/AutoTallerManager.API
+dotnet ef database update --project src/Infrastructure/AutoTallerManager.Infrastructure.csproj --startup-project src/API/AutoTallerManager.API.csproj
 ```
 
 ## Ejecución
 
 ```bash
-dotnet run --project src/AutoTallerManager.API
+dotnet run --project src/API/AutoTallerManager.API.csproj
 ```
 
 - Swagger UI: `https://localhost:7xxx/swagger`
