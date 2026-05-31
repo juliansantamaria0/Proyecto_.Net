@@ -12,6 +12,9 @@ COPY --from=build /app/publish .
 COPY --from=build /src/frontend ./frontend
 
 ENV ASPNETCORE_ENVIRONMENT=Production
+ENV DOTNET_EnableDiagnostics=0
+ENV DOTNET_GCConserveMemory=1
+ENV DOTNET_GCHeapHardLimit=450000000
 
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "AutoTallerManager.API.dll"]

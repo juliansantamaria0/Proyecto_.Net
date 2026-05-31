@@ -6,6 +6,9 @@ using AutoTallerManager.Infrastructure.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 RenderConnectionHelper.Apply(builder.Configuration);
 
@@ -17,6 +20,12 @@ var app = builder.Build();
 
 app.UseApiPipeline();
 app.MapGet("/health", () => Results.Text("OK"));
+
+app.Logger.LogInformation(
+    "AutoTallerManager listening on port {Port} | RENDER={Render} | Frontend={Frontend}",
+    port,
+    Environment.GetEnvironmentVariable("RENDER") ?? "false",
+    Directory.Exists(Path.Combine(app.Environment.ContentRootPath, "frontend")) ? "ok" : "missing");
 
 _ = InitializeDatabaseInBackground(app);
 
