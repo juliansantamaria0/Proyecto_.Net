@@ -1,4 +1,5 @@
 using AspNetCoreRateLimit;
+using AutoTallerManager.API.Helpers;
 using AutoTallerManager.API.Middleware;
 using AutoTallerManager.Infrastructure.Seed;
 using Microsoft.Extensions.FileProviders;
@@ -105,7 +106,5 @@ public static class WebApplicationExtensions
         });
     }
 
-    private static bool IsCloudHost() =>
-        !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RENDER")) ||
-        !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RAILWAY_ENVIRONMENT"));
+    private static bool IsCloudHost() => RenderConnectionHelper.IsCloudHost;
 }

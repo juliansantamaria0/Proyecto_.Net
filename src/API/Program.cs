@@ -18,6 +18,9 @@ builder.Services.AddApiInfrastructure(builder.Configuration, builder.Environment
 
 var app = builder.Build();
 
+var initLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseInit");
+await DbInitializer.InitializeWithRetryAsync(app.Services, initLogger);
+
 app.UseApiPipeline();
 app.MapGet("/health", () => Results.Text("OK"));
 
@@ -29,23 +32,4 @@ app.Logger.LogInformation(
         ?? "false",
     Directory.Exists(Path.Combine(app.Environment.ContentRootPath, "frontend")) ? "ok" : "missing");
 
-_ = Task.Run(async () =>
-{
-    await Task.Delay(TimeSpan.FromSeconds(5));
-    await InitializeDatabaseInBackground(app);
-});
-
 await app.RunAsync();
-
-static async Task InitializeDatabaseInBackground(WebApplication app)
-{
-    var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseInit");
-    try
-    {
-        await DbInitializer.InitializeWithRetryAsync(app.Services, logger);
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Database initialization failed after all retries.");
-    }
-}
