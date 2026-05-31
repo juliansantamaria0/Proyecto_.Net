@@ -23,7 +23,7 @@ public static class WebApplicationExtensions
 
         app.UseIpRateLimiting();
 
-        if (!app.Environment.IsDevelopment())
+        if (!app.Environment.IsDevelopment() && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RENDER")))
             app.UseHttpsRedirection();
 
         app.UseCors("AllowAll");
@@ -63,8 +63,22 @@ public static class WebApplicationExtensions
 
     private static string? ResolveFrontendPath(WebApplication app)
     {
-        var frontendPath = Path.GetFullPath(Path.Combine(app.Environment.ContentRootPath, "..", "..", "frontend"));
-        return Directory.Exists(frontendPath) ? frontendPath : null;
+        var root = app.Environment.ContentRootPath;
+        var candidates = new[]
+        {
+            Path.Combine(root, "frontend"),
+            Path.Combine(root, "..", "..", "frontend"),
+            Path.Combine(root, "..", "..", "..", "frontend"),
+        };
+
+        foreach (var path in candidates)
+        {
+            var full = Path.GetFullPath(path);
+            if (Directory.Exists(full))
+                return full;
+        }
+
+        return null;
     }
 
     private static void UseStaticFrontend(this WebApplication app)

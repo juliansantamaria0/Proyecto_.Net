@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.git/
+**/.idea/
+**/node_modules/
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/appsettings.Local.json
+**/appsettings.*.local.json
+**/*.user
+**/*.suo
+Thumbs.db
+.DS_Store
