@@ -1,12 +1,13 @@
 using AutoTallerManager.API.Extensions;
+using AutoTallerManager.API.Helpers;
 using AutoTallerManager.Application;
 using AutoTallerManager.Infrastructure;
+using AutoTallerManager.Infrastructure.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
-
-ApplyRenderConnectionString(builder.Configuration);
+RenderConnectionHelper.Apply(builder.Configuration);
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -15,16 +16,21 @@ builder.Services.AddApiInfrastructure(builder.Configuration);
 var app = builder.Build();
 
 app.UseApiPipeline();
-await app.InitializeDatabaseAsync();
+app.MapGet("/health", () => Results.Text("OK"));
 
-app.Run();
+_ = InitializeDatabaseInBackground(app);
 
-static void ApplyRenderConnectionString(ConfigurationManager configuration)
+await app.RunAsync();
+
+static async Task InitializeDatabaseInBackground(WebApplication app)
 {
-    if (!string.IsNullOrWhiteSpace(configuration.GetConnectionString("DefaultConnection")))
-        return;
-
-    var databaseUrl = configuration["DATABASE_URL"];
-    if (!string.IsNullOrWhiteSpace(databaseUrl))
-        configuration["ConnectionStrings:DefaultConnection"] = databaseUrl;
+    var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseInit");
+    try
+    {
+        await DbInitializer.InitializeWithRetryAsync(app.Services, logger);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Database initialization failed after all retries.");
+    }
 }

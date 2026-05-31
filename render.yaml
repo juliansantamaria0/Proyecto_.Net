@@ -1,5 +1,4 @@
 # Blueprint de Render — despliega API + frontend + PostgreSQL con un clic.
-# Uso: Dashboard Render → New → Blueprint → conectar repo → Apply.
 databases:
   - name: autotaller-db
     plan: free
@@ -13,7 +12,7 @@ services:
     plan: free
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    healthCheckPath: /
+    healthCheckPath: /health
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
@@ -22,6 +21,10 @@ services:
       - key: DatabaseProvider
         value: PostgreSQL
       - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: autotaller-db
+          property: connectionString
+      - key: DATABASE_URL
         fromDatabase:
           name: autotaller-db
           property: connectionString
