@@ -12,33 +12,6 @@ namespace AutoTallerManager.Infrastructure.Seed;
 
 public static class DbInitializer
 {
-    public static async Task InitializeWithRetryAsync(IServiceProvider serviceProvider, ILogger logger)
-    {
-        const int maxAttempts = 10;
-
-        for (var attempt = 1; attempt <= maxAttempts; attempt++)
-        {
-            try
-            {
-                await InitializeAsync(serviceProvider);
-                if (attempt > 1)
-                    logger.LogInformation("Database initialized on attempt {Attempt}.", attempt);
-                return;
-            }
-            catch (Exception ex) when (attempt < maxAttempts)
-            {
-                var delay = TimeSpan.FromSeconds(Math.Min(30, 3 * attempt));
-                logger.LogWarning(
-                    ex,
-                    "Database init failed (attempt {Attempt}/{Max}). Retrying in {Delay}s...",
-                    attempt,
-                    maxAttempts,
-                    delay.TotalSeconds);
-                await Task.Delay(delay);
-            }
-        }
-    }
-
     public static async Task InitializeAsync(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();

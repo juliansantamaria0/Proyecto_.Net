@@ -1,4 +1,3 @@
-using AutoTallerManager.API.Helpers;
 using AutoTallerManager.Domain.Exceptions;
 using System.Net;
 using System.Text.Json;
@@ -26,7 +25,6 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             NotFoundException notFound => (HttpStatusCode.NotFound, notFound.Message),
             BusinessRuleException business => (HttpStatusCode.BadRequest, business.Message),
             UnauthorizedAccessException unauthorized => (HttpStatusCode.Forbidden, unauthorized.Message),
-            InvalidOperationException invalid when RenderConnectionHelper.IsCloudHost => (HttpStatusCode.ServiceUnavailable, invalid.Message),
             _ => (HttpStatusCode.InternalServerError, "Ha ocurrido un error interno.")
         };
 

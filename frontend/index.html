@@ -583,19 +583,13 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script type="module" src="js/app.js?v=6"></script>
+<script type="module" src="js/app.js?v=5"></script>
 <script>
-    // En Render no usamos Service Worker (evita caché rota al despertar el servicio free)
-    const isCloudHost = location.hostname.endsWith('.onrender.com') ||
-        location.hostname.endsWith('.railway.app') ||
-        location.hostname.endsWith('.up.railway.app');
-    if (isCloudHost && 'serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
-    } else if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('Service Worker registrado:', reg.scope))
-                .catch(err => console.error('Error al registrar SW:', err));
+                .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+                .catch(err => console.error('Error al registrar el Service Worker:', err));
         });
     }
 </script>

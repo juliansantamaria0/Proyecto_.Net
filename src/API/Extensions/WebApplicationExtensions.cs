@@ -1,5 +1,4 @@
 using AspNetCoreRateLimit;
-using AutoTallerManager.API.Helpers;
 using AutoTallerManager.API.Middleware;
 using AutoTallerManager.Infrastructure.Seed;
 using Microsoft.Extensions.FileProviders;
@@ -20,10 +19,11 @@ public static class WebApplicationExtensions
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "AutoTallerManager v1");
                 options.DocumentTitle = "AutoTallerManager - Swagger";
             });
-            app.UseIpRateLimiting();
         }
 
-        if (!app.Environment.IsDevelopment() && !IsCloudHost())
+        app.UseIpRateLimiting();
+
+        if (!app.Environment.IsDevelopment())
             app.UseHttpsRedirection();
 
         app.UseCors("AllowAll");
@@ -63,22 +63,8 @@ public static class WebApplicationExtensions
 
     private static string? ResolveFrontendPath(WebApplication app)
     {
-        var root = app.Environment.ContentRootPath;
-        var candidates = new[]
-        {
-            Path.Combine(root, "frontend"),
-            Path.Combine(root, "..", "..", "frontend"),
-            Path.Combine(root, "..", "..", "..", "frontend"),
-        };
-
-        foreach (var path in candidates)
-        {
-            var full = Path.GetFullPath(path);
-            if (Directory.Exists(full))
-                return full;
-        }
-
-        return null;
+        var frontendPath = Path.GetFullPath(Path.Combine(app.Environment.ContentRootPath, "..", "..", "frontend"));
+        return Directory.Exists(frontendPath) ? frontendPath : null;
     }
 
     private static void UseStaticFrontend(this WebApplication app)
@@ -105,6 +91,4 @@ public static class WebApplicationExtensions
             }
         });
     }
-
-    private static bool IsCloudHost() => RenderConnectionHelper.IsCloudHost;
 }
