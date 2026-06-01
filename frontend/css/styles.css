@@ -280,6 +280,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 .view.active { display: block; }
 
+/* Login/Register are layouted with flex; keep it when active */
+.login-view.view.active { display: flex; }
+
 @keyframes viewFadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
