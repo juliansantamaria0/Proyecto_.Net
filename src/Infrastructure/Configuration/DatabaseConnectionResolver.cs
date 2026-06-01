@@ -7,16 +7,50 @@ namespace AutoTallerManager.Infrastructure.Configuration;
 /// </summary>
 public static class DatabaseConnectionResolver
 {
-    public static (string Provider, string ConnectionString) Resolve(IConfiguration configuration)
+    public static (string Provider, string ConnectionString) Resolve(IConfiguration configuration, bool isDevelopment)
+    {
+        if (isDevelopment)
+            return ResolveDevelopment(configuration);
+
+        return ResolveProduction(configuration);
+    }
+
+    private static (string Provider, string ConnectionString) ResolveDevelopment(IConfiguration configuration)
+    {
+        var provider = configuration["DatabaseProvider"] ?? "SQLite";
+        var connectionString = GetConnectionString(configuration);
+
+        if (!provider.Equals("SQLite", StringComparison.OrdinalIgnoreCase)
+            && !provider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                "En desarrollo solo se admite DatabaseProvider=SQLite o PostgreSQL.");
+        }
+
+        return (provider, connectionString);
+    }
+
+    private static (string Provider, string ConnectionString) ResolveProduction(IConfiguration configuration)
     {
         var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
         if (!string.IsNullOrWhiteSpace(databaseUrl))
             return ("PostgreSQL", ConvertPostgresDatabaseUrl(databaseUrl));
 
-        var provider = configuration["DatabaseProvider"]
+        var configuredProvider = configuration["DatabaseProvider"]
             ?? Environment.GetEnvironmentVariable("DATABASE_PROVIDER")
             ?? "PostgreSQL";
 
+        if (!configuredProvider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                "En producción solo se admite PostgreSQL. Configure DATABASE_URL o DatabaseProvider=PostgreSQL.");
+        }
+
+        return ("PostgreSQL", GetConnectionString(configuration));
+    }
+
+    private static string GetConnectionString(IConfiguration configuration)
+    {
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
 
@@ -25,7 +59,7 @@ public static class DatabaseConnectionResolver
                 "No se encontró cadena de conexión. Configure ConnectionStrings:DefaultConnection en appsettings " +
                 "o las variables DATABASE_URL / ConnectionStrings__DefaultConnection en el hosting.");
 
-        return (provider, connectionString);
+        return connectionString;
     }
 
     /// <summary>

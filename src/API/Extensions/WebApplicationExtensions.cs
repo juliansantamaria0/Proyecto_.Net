@@ -32,6 +32,9 @@ public static class WebApplicationExtensions
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();
+
+        var frontendPath = ResolveFrontendPath(app);
+        app.MapApiStatusEndpoints(frontendPath is not null);
         app.MapSpaFallback();
 
         return app;

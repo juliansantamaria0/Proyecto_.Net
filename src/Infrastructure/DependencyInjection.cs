@@ -7,17 +7,17 @@ using AutoTallerManager.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 namespace AutoTallerManager.Infrastructure;
 
 public static class DependencyInjection
 {
-    private static readonly MySqlServerVersion MySqlVersion = new(new Version(8, 0, 36));
-
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        bool isDevelopment)
     {
-        var (provider, connectionString) = DatabaseConnectionResolver.Resolve(configuration);
+        var (provider, connectionString) = DatabaseConnectionResolver.Resolve(configuration, isDevelopment);
 
         services.AddDbContext<AutoTallerDbContext>(options =>
         {
@@ -29,10 +29,8 @@ public static class DependencyInjection
                 case "POSTGRESQL":
                     options.UseNpgsql(connectionString);
                     break;
-                case "MYSQL":
                 default:
-                    options.UseMySql(connectionString, MySqlVersion);
-                    break;
+                    throw new InvalidOperationException($"Proveedor de base de datos no soportado: {provider}");
             }
         });
 

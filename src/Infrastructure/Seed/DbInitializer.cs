@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MySqlConnector;
 using Npgsql;
 
 namespace AutoTallerManager.Infrastructure.Seed;
@@ -18,7 +17,7 @@ public static class DbInitializer
         var context = scope.ServiceProvider.GetRequiredService<AutoTallerDbContext>();
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<AutoTallerDbContext>>();
-        var provider = configuration.GetValue<string>("DatabaseProvider") ?? "MySQL";
+        var provider = configuration.GetValue<string>("DatabaseProvider") ?? "PostgreSQL";
 
         try
         {
@@ -27,31 +26,17 @@ public static class DbInitializer
             else
                 await context.Database.MigrateAsync();
         }
-        catch (MySqlException ex) when (ex.Number is 1045 or 1049)
-        {
-            logger.LogCritical(
-                "Error de conexión MySQL (acceso o base de datos). Verifique ConnectionStrings:DefaultConnection " +
-                "y que el servidor MySQL esté en ejecución.");
-            throw;
-        }
-        catch (MySqlException ex)
-        {
-            logger.LogCritical(
-                ex,
-                "No se pudo conectar a MySQL. Inicie el servidor MySQL o cambie DatabaseProvider a SQLite/PostgreSQL.");
-            throw;
-        }
         catch (PostgresException ex) when (ex.SqlState == "28P01")
         {
             logger.LogCritical(
-                "Autenticación PostgreSQL fallida. Corrija la contraseña o use DatabaseProvider=MySQL/SQLite.");
+                "Autenticación PostgreSQL fallida. Verifique la cadena de conexión o DATABASE_URL en Railway.");
             throw;
         }
         catch (NpgsqlException ex)
         {
             logger.LogCritical(
                 ex,
-                "No se pudo conectar a PostgreSQL. Inicie el servidor o cambie DatabaseProvider en appsettings.");
+                "No se pudo conectar a PostgreSQL. En local use docker compose o DatabaseProvider=SQLite en Development.");
             throw;
         }
 
