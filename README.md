@@ -1,6 +1,49 @@
 # AutoTallerManager
 
-Backend RESTful para la gestión integral de un taller automotriz, implementado con **ASP.NET Core** y arquitectura hexagonal (Ports & Adapters).
+Sistema de gestión integral para un taller automotriz: **API REST** en **ASP.NET Core** (arquitectura hexagonal) y **SPA** en JavaScript modular.
+
+## Despliegue en producción
+
+| Componente | Plataforma | URL |
+|------------|------------|-----|
+| **Aplicación web** (frontend) | Netlify | **https://proyectoneet.netlify.app** |
+| **API REST** (backend) | Railway | **https://alert-motivation-production.up.railway.app** |
+| **Health check** | Railway | https://alert-motivation-production.up.railway.app/health |
+
+Arquitectura **híbrida**: el frontend estático se sirve desde Netlify; la API y PostgreSQL viven en Railway. En local, la API puede servir también la carpeta `frontend/` en un solo puerto.
+
+### Credenciales de demostración (producción y local)
+
+| Rol | Correo | Contraseña |
+|-----|--------|------------|
+| Admin | admin@autotaller.com | Admin123! |
+| Mecánico | mecanico@autotaller.com | Mecanico123! |
+| Recepcionista | recepcion@autotaller.com | Recepcion123! |
+
+Los clientes se registran desde la pantalla de registro (`POST /api/auth/register`).
+
+### Variables de entorno (referencia)
+
+No subir secretos al repositorio. Configurar en los paneles de cada plataforma:
+
+**Railway (API)**
+
+| Variable | Descripción |
+|----------|-------------|
+| `DATABASE_URL` | Referencia al servicio PostgreSQL (Railway la inyecta al enlazar la BD) |
+| `ASPNETCORE_ENVIRONMENT` | `Production` |
+| `FRONTEND_URL` | `https://proyectoneet.netlify.app` (CORS) |
+| `JWT__Key` | Clave JWT segura (distinta a la de desarrollo) |
+
+**Netlify (frontend)**
+
+| Variable | Descripción |
+|----------|-------------|
+| `API_BASE_URL` | `https://alert-motivation-production.up.railway.app` (sin `/api`; el build la añade) |
+
+El archivo `netlify.toml` en la raíz define base `frontend`, comando `node scripts/generate-env.js` y publicación de la SPA.
+
+---
 
 ## Arquitectura
 
@@ -17,7 +60,8 @@ src/
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - PostgreSQL 14+ (Docker en puerto **5433** o instalación local en **5432**)
 
-El proveedor por defecto en producción es **PostgreSQL** (`DatabaseProvider: PostgreSQL` en `appsettings.json`). También se admite **SQLite** y **MySQL** según configuración.
+- **Producción / Railway:** solo **PostgreSQL** (`DATABASE_URL` o `DatabaseProvider: PostgreSQL`).
+- **Desarrollo local:** **SQLite** por defecto (`appsettings.Development.json`) o **PostgreSQL** con Docker (`docker compose up -d`).
 
 > **Nota (entorno Development):** al ejecutar con el perfil por defecto (`ASPNETCORE_ENVIRONMENT=Development`), `appsettings.Development.json` usa **SQLite** (`autotaller.db`) para poder probar sin Docker. Si sigue los pasos de PostgreSQL más abajo, use `docker compose up -d` y, opcionalmente, alinee `appsettings.Development.json` con la misma cadena de conexión de `appsettings.json`, o ejecute con `ASPNETCORE_ENVIRONMENT=Production`.
 
@@ -51,7 +95,7 @@ frontend/
 
 ### Credenciales demo
 
-Ver tabla **Usuarios de prueba (seed)** más abajo.
+Ver tabla en [Despliegue en producción](#despliegue-en-producción) o **Usuarios de prueba (seed)** más abajo.
 
 ---
 
@@ -169,3 +213,18 @@ Todos los listados aceptan `pageNumber` y `pageSize`. La respuesta incluye el en
 ## Migraciones
 
 - `InitialCreate` — esquema inicial con todas las entidades del dominio
+
+---
+
+## Checklist de entrega
+
+| Ítem | Estado |
+|------|--------|
+| URLs públicas documentadas (Netlify + Railway) | ✅ |
+| Login y API operativos en producción | ✅ |
+| Desarrollo local sin romper producción (`Development` → SQLite) | ✅ |
+| Secretos fuera de git (`.gitignore`: `appsettings.Local.json`, `*.db`) | ✅ |
+| CORS configurado (`FRONTEND_URL` en Railway) | ✅ |
+| `netlify.toml` + variable `API_BASE_URL` en Netlify | ✅ |
+
+**Antes de entregar el repo:** haga `git push` con el `README.md` y `netlify.toml` actualizados. Si el enunciado pide video o memoria, adjunte capturas de ambas URLs y un login de prueba con el usuario Admin.
