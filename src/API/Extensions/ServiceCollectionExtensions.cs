@@ -1,5 +1,6 @@
 using System.Text;
 using AspNetCoreRateLimit;
+using AutoTallerManager.API.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -16,7 +17,7 @@ public static class ServiceCollectionExtensions
         services.AddJwtAuthentication(configuration);
         services.AddAuthorization();
         services.AddRateLimiting(configuration);
-        services.AddCorsPolicy();
+        services.AddCorsPolicy(configuration);
 
         return services;
     }
@@ -90,12 +91,17 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    private static IServiceCollection AddCorsPolicy(this IServiceCollection services)
+    private static IServiceCollection AddCorsPolicy(this IServiceCollection services, IConfiguration configuration)
     {
+        var allowedOrigins = CorsOriginResolver.GetAllowedOrigins(configuration);
+
         services.AddCors(options =>
         {
-            options.AddPolicy("AllowAll", policy =>
-                policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders("X-Total-Count"));
+            options.AddPolicy("PermitirFrontend", policy =>
+                policy.WithOrigins(allowedOrigins)
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .WithExposedHeaders("X-Total-Count"));
         });
 
         return services;

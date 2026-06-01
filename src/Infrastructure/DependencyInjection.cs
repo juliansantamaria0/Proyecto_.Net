@@ -1,5 +1,6 @@
 using AutoTallerManager.Application.Ports.Output;
 using AutoTallerManager.Domain.Ports.Output;
+using AutoTallerManager.Infrastructure.Configuration;
 using AutoTallerManager.Infrastructure.Persistence;
 using AutoTallerManager.Infrastructure.Repositories;
 using AutoTallerManager.Infrastructure.Security;
@@ -16,9 +17,7 @@ public static class DependencyInjection
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var provider = configuration.GetValue<string>("DatabaseProvider") ?? "MySQL";
-        var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+        var (provider, connectionString) = DatabaseConnectionResolver.Resolve(configuration);
 
         services.AddDbContext<AutoTallerDbContext>(options =>
         {

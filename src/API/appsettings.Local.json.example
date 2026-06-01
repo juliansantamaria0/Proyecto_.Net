@@ -1,6 +1,6 @@
 {
-  "DatabaseProvider": "MySQL",
+  "DatabaseProvider": "PostgreSQL",
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Port=3306;Database=AutoTallerDB;User=root;Password=TU_PASSWORD;"
+    "DefaultConnection": "Host=localhost;Port=5433;Database=AutoTallerDB;Username=postgres;Password=postgres"
   }
 }

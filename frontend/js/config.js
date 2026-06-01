@@ -1,6 +1,27 @@
+/** Resuelve la URL de la API: local (mismo host o :5192) vs producción (Netlify → Railway). */
+function resolveApiBaseUrl() {
+    const injected = typeof window.__ATM_API_BASE__ === 'string' ? window.__ATM_API_BASE__.trim() : '';
+    if (injected) return injected.replace(/\/$/, '');
+
+    const { hostname, port, protocol, origin } = window.location;
+    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+
+    if (isLocal) {
+        // SPA servida por la API en 5192/7197 → mismo origen
+        if (port === '5192' || port === '7197') return `${origin}/api`;
+        // Front en otro puerto (Live Server, etc.) → API local por defecto
+        return 'http://localhost:5192/api';
+    }
+
+    console.warn(
+        '[AutoTallerManager] API_BASE_URL no configurada. Defina API_BASE_URL en Netlify o window.__ATM_API_BASE__.'
+    );
+    return `${origin}/api`;
+}
+
 /** Configuración global de la aplicación */
 export const CONFIG = {
-    API_BASE_URL: `${window.location.origin}/api`,
+    API_BASE_URL: resolveApiBaseUrl(),
     DEFAULT_PAGE_SIZE: 10,
     LOW_STOCK_THRESHOLD: 10,
     TOKEN_KEY: 'atm_token',

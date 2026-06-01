@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.git/
+frontend/
+*.db
+*.db-shm
+*.db-wal
+appsettings.Local.json
+**/*.user

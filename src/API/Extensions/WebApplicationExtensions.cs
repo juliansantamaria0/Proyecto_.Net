@@ -26,8 +26,9 @@ public static class WebApplicationExtensions
         if (!app.Environment.IsDevelopment())
             app.UseHttpsRedirection();
 
-        app.UseCors("AllowAll");
         app.UseStaticFrontend();
+        app.UseRouting();
+        app.UseCors("PermitirFrontend");
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();
