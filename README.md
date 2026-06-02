@@ -216,15 +216,3 @@ Todos los listados aceptan `pageNumber` y `pageSize`. La respuesta incluye el en
 
 ---
 
-## Checklist de entrega
-
-| Ítem | Estado |
-|------|--------|
-| URLs públicas documentadas (Netlify + Railway) | ✅ |
-| Login y API operativos en producción | ✅ |
-| Desarrollo local sin romper producción (`Development` → SQLite) | ✅ |
-| Secretos fuera de git (`.gitignore`: `appsettings.Local.json`, `*.db`) | ✅ |
-| CORS configurado (`FRONTEND_URL` en Railway) | ✅ |
-| `netlify.toml` + variable `API_BASE_URL` en Netlify | ✅ |
-
-**Antes de entregar el repo:** haga `git push` con el `README.md` y `netlify.toml` actualizados. Si el enunciado pide video o memoria, adjunte capturas de ambas URLs y un login de prueba con el usuario Admin.
